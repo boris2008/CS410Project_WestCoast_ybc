@@ -3,7 +3,7 @@ country_code = "US"
 #get a fresh token, it expires in a short time.
 #https://developer.spotify.com/console/post-playlists/
 #get token
-authorization = "BQDHnNWZ8jK4rkd1vgI35CI65-eHhiejvvHiu0rdbUKP0RLDitQzbZZFQGccjC-6J7CXmjmz0CaZsQ1kPOx3NJZ27kecPEhzonVDwtDQHgObyLp6Y1gDtaSfDHvDKBC-Yl3h0hPQyID7ohsf-mOOHsv_y1JXvwIO7P06PIdZSP4xRVWC4QvqMSmpuLfcs8hY1g8VazHecdVKGuCtyXGUGhrqezU4upD53Y-D3TYivsUOVuD2-ZVn"
+authorization = "BQD1CY-dNGNYF3700-nm4quYzWcJs9n-KnTVzZj_CSKOLv1slhxLsKubO6adaTTdvsOVYG3RdFV6lzV4wvoo1dtqSZ7ojsx91JyPcL07sGWdY0197HFbzqLcFsugYkMXTCOlOrGD5w2GhNt7u9nTrjiqxc0GUOXviu_qEbezLt3JxM0haBmXpiZuwTOFhZTypKg3EyOwmDxkfYDtZ03C6llEq230KUoeal41RSLPTBxIFEx0WGgS"
 user_id = "oz3udvh8gw737jcbug8eu1crv"
 #this playlist id is for
 playlist_id0= '00DEbjBighjpELJnp5Fh8s'
@@ -17,6 +17,7 @@ import requests
 import json
 import pandas as pd
 import numpy as np
+import time
 
 def get_artist_from_artistid(artist_id):
   url = ''.join(["https://api.spotify.com/v1/artists/",artist_id])
@@ -158,6 +159,17 @@ def add_tracks_to_playlist(track_id_list,playlist_id):
 
 #add_tracks_to_playlist(track_id_list1,playlist_id0)
 
+def json_read_to_list(info_temp):
+  playlist_tracks_info_list = []
+  print("length:",len(info_temp))
+  for i in np.arange(len(info_temp)):
+    temp0 = [info_temp[i]['track']['artists'][0]['name'],
+    info_temp[i]['track']['artists'][0]['id'],
+    info_temp[i]['track']['name'],
+    info_temp[i]['track']['id']]
+    playlist_tracks_info_list.append(temp0)
+  return playlist_tracks_info_list
+
 def get_playlist_tracks(playlist_id):
   url = ''.join(["https://api.spotify.com/v1/playlists/",
         playlist_id,
@@ -173,28 +185,37 @@ def get_playlist_tracks(playlist_id):
   response = requests.request("GET", url, headers=headers, data=payload)
   data_temp = json.loads(response.text)
   info_temp = data_temp['items']
-  playlist_tracks_info_list = []
-  print("length:",len(info_temp))
-  for i in np.arange(len(info_temp)):
-    temp0 = [info_temp[i]['track']['artists'][0]['name'],
-    info_temp[i]['track']['artists'][0]['id'],
-    info_temp[i]['track']['name'],
-    info_temp[i]['track']['id']]
-    playlist_tracks_info_list.append(temp0)
+  playlist_tracks_info_list0 = json_read_to_list(info_temp)
 
-  playlist_df = pd.DataFrame(playlist_tracks_info_list,
+  next_temp = data_temp['next']
+  count_next = 0
+  while(next_temp):
+    count_next+=1
+    time.sleep(0.2)
+    response = requests.request("GET", next_temp, headers=headers, data=payload)
+    data_next_temp = json.loads(response.text)
+    info_next_temp = data_next_temp['items']
+    next_temp = data_next_temp['next']
+    playlist_tracks_info_list0+=json_read_to_list(info_next_temp)
+    print("WHAT IS the ",str(count_next), " next: ",next_temp)
+  print("the total number of item captured: ", len(playlist_tracks_info_list0))
+
+
+
+  playlist_df = pd.DataFrame(playlist_tracks_info_list0,
     columns=['artist_name', 'artist_id','track_name', 'track_id'])
+
   playlist_df.to_csv('my_playlist.csv',header=True, index=False)
 
   return playlist_df
   #return data_temp
 
-
-
 playlist_tracks1= get_playlist_tracks(playlist_id0)
-print(playlist_tracks1.shape)
-print(playlist_tracks1['track_name'])
-print(playlist_tracks1.head(5))
+
+
+#print(playlist_tracks1.shape)
+#print(playlist_tracks1['track_name'])
+#print(playlist_tracks1.head(5))
 
 
 #artist_id0 = "5rSXSAkZ67PYJSvpUpkOr7"# backstreet boys
