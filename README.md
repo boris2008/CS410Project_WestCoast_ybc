@@ -8,7 +8,8 @@ go to the spotify profile webpage and check the webpage address. https://open.sp
 2. get a fresh OAuth Token
 from an spotify console. e.g. https://developer.spotify.com/console/get-playlists/
 
-3. edit the personal info in the "spotify_api.py" and export a playlist as "my_playlist.csv"
+3. edit the personal info in the "spotify_api.py" and export a playlist as "my_playlist.csv".
+I have a playlist of 401 songs.
 
 4. sentiment analysis
 try "sentiment_analysis_2.py" and export a table as "my_playlist_sentiment2.csv"
